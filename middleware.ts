@@ -6,29 +6,48 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const user = req.auth;
 
-  console.log(user);
+  console.log("User:", user);
 
-  // Redirect to dashboard if logged in and trying to access login or register page
-  if ((pathname === '/login' || pathname === '/register') && isLoggedIn) {
-    return NextResponse.redirect(new URL('/admin/dashboard', req.nextUrl));
-  }
-
-  // Allow access to login or register page if not logged in
-  if ((pathname === '/login' || pathname === '/register') && !isLoggedIn) {
+  // Public route: /admin
+  if (pathname === '/admin') {
+    // Redirect logged-in users from /admin to /admin/dashboard
+    if (isLoggedIn) {
+      return NextResponse.redirect(new URL('/admin/dashboard', req.nextUrl));
+    }
+    // Allow access for non-logged-in users
     return NextResponse.next();
   }
 
-  // Redirect to login if not logged in and trying to access a protected route
-  console.log(isLoggedIn);
-  if (!isLoggedIn) {
-    return NextResponse.redirect(new URL('/login', req.nextUrl));
+  // Public routes: /login and /register
+  if (pathname === '/login' || pathname === '/register') {
+    // Redirect logged-in users to /admin/dashboard
+    if (isLoggedIn) {
+      return NextResponse.redirect(new URL('/admin/dashboard', req.nextUrl));
+    }
+    // Allow access for non-logged-in users
+    return NextResponse.next();
   }
 
-  // Allow the request to continue for authenticated users
+  // Protected routes: /admin/* (e.g., /admin/dashboard, /admin/product)
+  if (pathname.startsWith('/admin/')) {
+    // Redirect non-logged-in users to /admin
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL('/admin', req.nextUrl));
+    }
+    // Allow logged-in users to access protected routes
+    return NextResponse.next();
+  }
+
+  // Default to allowing the request
   return NextResponse.next();
 });
 
-// Restrict Middleware to only /admin/* routes
+// Restrict Middleware to specific routes
 export const config = {
-  matcher: ["/admin/:path*"], // Matches any route under /admin/
+  matcher: [
+    "/admin", // Public access to /admin
+    "/admin/:path*", // Protect all other admin routes
+    "/login", // Handle login route
+    "/register", // Handle register route
+  ],
 };
