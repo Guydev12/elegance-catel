@@ -99,4 +99,3 @@ export async function getUserById(userId:string): Promise<User | undefined> {
   return user;
 }
 
-export default function reset(){}

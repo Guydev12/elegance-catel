@@ -133,7 +133,7 @@ const Register = () => {
       </CardContent>
       <CardFooter className="flex justify-between">
         <p className="text-[11px] font-light text-[#313131]">
-          Dont have an account? <Link href="/login">Login &rarr;</Link>
+          Already  have an account? <Link href="/login">Login &rarr;</Link>
         </p>
       </CardFooter>
     </Card>
