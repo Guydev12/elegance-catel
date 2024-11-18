@@ -10,12 +10,14 @@ const page = () => {
   return (
     <CardWrapper 
      logo={<AppLogo/>}//.
+     title={<p className='text-[19px]  md:leading-normal '>
+      Welcome To The Elegance Dashboard
+    </p>}
+    description='Press Login to continue'
     >
       
-      <div className='mt-4 flex grow flex-col gap-4 md:flex-row'>
-        <p className='text-xl md:text-3xl md:leading-normal '>
-          <strong>Welcome To The Elegance Dashboard</strong>
-        </p>
+      <div className='mt-4 flex grow flex-col gap-4  justify-center space-y-5'>
+        
     <Button asChild>
 
         <Link href='/login'>

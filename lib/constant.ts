@@ -1,4 +1,5 @@
 import { SideNavItem } from "@/types"
+import { BarChart3, Home, Package, Settings, ShoppingCart, Users } from 'lucide-react'
 
 
 export const SIDENAV_ITEMS:SideNavItem[] = [
@@ -50,3 +51,21 @@ export const SIDENAV_ITEMS:SideNavItem[] = [
 //brand
 
 export const APP_NAME: string= "Elegance Catel"
+
+// Simplified navigation data for the e-commerce dashboard
+export const navItems = [
+  { title: "Dashboard", icon: Home, url: "/admin/dashboard" },
+  {
+    title: "Products",
+    icon: Package,
+    items: [
+      { title: "All Products", url: "/admin/products" },
+      { title: "Categories", url: "/admin/categories" },
+
+    ],
+  },
+  { title: "Orders", icon: ShoppingCart, url: "/admin/Orders" },
+  { title: "Customers", icon: Users, url: "/admin/customers" },
+  { title: "Analytics", icon: BarChart3, url: "/admin/analytics" },
+  { title: "Settings", icon: Settings, url: "/admin/settings" },
+]
