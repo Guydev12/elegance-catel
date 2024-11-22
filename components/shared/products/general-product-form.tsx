@@ -573,7 +573,8 @@ export default function GeneralProductForm() {
                 </div>
               </CardContent>
             </Card>
-            <div className="flex w-full justify-end  items-center gap-4">
+            <div></div>
+            <div className="flex w-full justify-end space-x-4 items-center gap-4">
               <Button variant='outline' className='text-black ' type="button" disabled={isPending}>Cancel</Button>
               <Button disabled={isPending} type="submit" className='bg-brand-primary text-md font-bold'>
               { isPending ? " Creating ... " : " Create Product"} 
