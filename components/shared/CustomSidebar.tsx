@@ -39,11 +39,18 @@ import AppLogo from '@/components/shared/AppLogo'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
+import { UserEntity } from '@/types'
+
 type PropOptions = {
   children: React.ReactNode
+  user: UserEntity
 }
 
-export const CustomSidebar: React.FC<PropOptions> = ({ children }) => {
+export const CustomSidebar: React.FC<PropOptions> = ({ children,user }) => {
+  const username = user?.username
+  const userImage = user?.avatar
+  const fallBackImage = username?.charAt(0).toUpperCase()
+
   const pathname = usePathname()
   const lastUrl = pathname.split('/').pop()
   const currentPathName = lastUrl
@@ -61,7 +68,7 @@ export const CustomSidebar: React.FC<PropOptions> = ({ children }) => {
                 </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
+           </SidebarMenu>
           <form>
             <SidebarGroup className="py-0">
               <SidebarGroupContent className="relative">
@@ -102,7 +109,7 @@ export const CustomSidebar: React.FC<PropOptions> = ({ children }) => {
                                 <SidebarMenuButton
                                   asChild
                                   className={`${
-                                    pathname === item.url
+                                    pathname === item.url 
                                       ? 'bg-pink-300 text-brand-primary font-bold'
                                       : ''
                                   }`}
@@ -161,10 +168,13 @@ export const CustomSidebar: React.FC<PropOptions> = ({ children }) => {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          <div className="flex items-center gap-4 ">
+            <h5>{username}</h5>
           <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarImage src={userImage} alt="@shadcn" />
+            <AvatarFallback>{fallBackImage}</AvatarFallback>
           </Avatar>
+          </div>
         </header>
         <main>{children}</main>
       </SidebarInset>

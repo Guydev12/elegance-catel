@@ -53,14 +53,14 @@ export const SIDENAV_ITEMS:SideNavItem[] = [
 export const APP_NAME: string= "Elegance Catel"
 
 // Simplified navigation data for the e-commerce dashboard
-export const navItems = [
+export const navItems= [
   { title: "Dashboard", icon: Home, url: "/admin/dashboard" },
   {
     title: "Products",
     icon: Package,
     items: [
       { title: "All Products", url: "/admin/products" },
-      { title: "Categories", url: "/admin/categories" },
+      { title: "Categories", url: "/admin/products/categories" },
 
     ],
   },

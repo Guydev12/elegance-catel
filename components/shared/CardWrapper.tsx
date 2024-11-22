@@ -5,7 +5,7 @@ interface CardWrapperProps {
   logo?: ReactNode; // Logo can be any valid React node (e.g., component, JSX, or text)
   title?: string | ReactNode; // Title is optional and expected to be a string
   description?: string; // Description is optional and expected to be a string
-  children?: ReactNode; // Children are required and can be any valid React node
+  children?: ReactNode;
 }
 
 const CardWrapper: React.FC<CardWrapperProps> = ({ logo, title, description, children }) => {

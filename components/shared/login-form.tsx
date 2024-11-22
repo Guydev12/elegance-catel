@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input"
 
 import Link from 'next/link'
 
-import { loginSchema, User} from'@/types'
+import { loginSchema} from'@/types'
 import FormError from "./error-form"
 import FormSuccess from "./success-form"
 
@@ -116,7 +116,7 @@ const CardWrapper = ({
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full bg-gradient-to-r from-pink-500 to-brand-primary font-bold text-xl">
+            <Button disabled={isPending} type="submit" className="w-full bg-gradient-to-r from-pink-500 to-brand-primary font-bold text-xl">
               {isPending?'Loging...':'Login'}
              </Button>
           </form>

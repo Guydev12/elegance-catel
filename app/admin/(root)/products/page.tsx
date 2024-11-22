@@ -1,10 +1,15 @@
+"use client"
+import ProductTable from '@/components/shared/products/product-table'
 import React from 'react'
 
 const page = () => {
+  
+  
+  
   return (
-    <div>
-      products
-    </div>
+    <section >
+      <ProductTable />
+      </section>
   )
 }
 
