@@ -17,10 +17,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createCategorie } from "@/lib/actions/categorie.actians";
 import { categoryFormSchema } from "@/types";
+import { useRouter } from "next/navigation";
 
 export function CategoryForm() {
   const [isPending, startTransition] = useTransition();
-
+  const router = useRouter();
   const form = useForm<z.infer<typeof categoryFormSchema>>({
     resolver: zodResolver(categoryFormSchema),
     defaultValues: {
@@ -38,6 +39,7 @@ export function CategoryForm() {
         } else if (data && data.success) {
           console.log("success", data.success);
           toast.success(data.success);
+          router.refresh();
         } else {
           console.log("You are not authorized to create a category");
         }
