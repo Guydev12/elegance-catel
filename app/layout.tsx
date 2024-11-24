@@ -4,6 +4,7 @@ import './globals.css'
 import { Poppins as FontSans } from 'next/font/google'
 import { cn } from '@/lib/utils'
 import { SessionProvider } from 'next-auth/react'
+import { Toaster } from 'react-hot-toast'
 
 const fontSans = FontSans({
   subsets: ['latin'],
@@ -29,7 +30,11 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+            {children}
+            <Toaster/>            
+         </SessionProvider>
+
       </body>
     </html>
   )

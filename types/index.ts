@@ -9,6 +9,15 @@ export const CustomerSchema = z.object({
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
 })
+//categories
+
+
+export const categoryFormSchema = z.object({
+  name: z.string().min(2, "Category name must be at least 2 characters long"),
+});
+
+export type CategoryFormValues = z.infer<typeof categoryFormSchema>;
+
 
 // Product Mode
 //l

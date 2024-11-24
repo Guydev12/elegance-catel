@@ -1,16 +1,13 @@
-"use client"
-import ProductTable from '@/components/shared/products/product-table'
-import React from 'react'
+"use client";
+import ProductTable from "@/components/shared/products/product-table";
+import React from "react";
 
 const page = () => {
-  
-  
-  
   return (
-    <section >
+    <section>
       <ProductTable />
-      </section>
-  )
-}
+    </section>
+  );
+};
 
-export default page
+export default page;

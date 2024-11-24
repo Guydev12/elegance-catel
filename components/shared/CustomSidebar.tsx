@@ -158,7 +158,7 @@ export const CustomSidebar: React.FC<PropOptions> = ({ children,user }) => {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
-                </BreadcrumbItem>
+         </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbPage className="font-bold">

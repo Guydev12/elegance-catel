@@ -1,15 +1,15 @@
-'use client'
+"use client";
 
-import { useEffect, useState, useTransition } from 'react'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useFieldArray, useForm, useWatch } from 'react-hook-form'
-import { z } from 'zod'
-import Image from 'next/image'
-import { CrossIcon, PlusCircleIcon, X } from 'lucide-react'
-import { convertBlobUrlToFile } from"@/lib/supabase-client"
-import { uploadImage } from "@/lib/actions/supabase.actions"
+import React, { useEffect, useState, useTransition } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
+import Image from "next/image";
+import { PlusCircleIcon, X } from "lucide-react";
+import { convertBlobUrlToFile } from "@/lib/supabase-client";
+import { uploadImage } from "@/lib/actions/supabase.actions";
 
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -18,131 +18,135 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { createProduct } from '@/lib/actions/product.actions'
-import { ProductSchema } from '@/types'
+} from "@/components/ui/select";
+import { Category } from "@prisma/client";
+//import { createProduct } from '@/lib/actions/product.actions'
+import { ProductSchema } from "@/types";
 
-export const formSchema = ProductSchema
+export const formSchema = ProductSchema;
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 const sizeOptions = [
-  { id: 'xs', label: 'XS' },
-  { id: 's', label: 'S' },
-  { id: 'm', label: 'M' },
-  { id: 'l', label: 'L' },
-  { id: 'xl', label: 'XL' },
-  { id: 'xxl', label: 'XXL' },
-]
+  { id: "xs", label: "XS" },
+  { id: "s", label: "S" },
+  { id: "m", label: "M" },
+  { id: "l", label: "L" },
+  { id: "xl", label: "XL" },
+  { id: "xxl", label: "XXL" },
+];
+type GeneralProductFormProps = {
+  categoryOptions: Category[];
+};
 
-const categoryOptions = [
-  { value: 'electronics', label: 'Electronics' },
-  { value: 'clothing', label: 'Clothing' },
-  { value: 'books', label: 'Books' },
-  { value: 'home', label: 'Home & Garden' },
-  { value: 'sports', label: 'Sports & Outdoors' },
-]
-
-export default function GeneralProductForm() {
-  const [previewImages, setPreviewImages] = useState<string[]>([])
-  const [ imageUrls, setImageUrls] = useState<string[]>([]) 
-  const [isPending, startTransition]=useTransition()
- const form = useForm<FormValues>({
+export default function GeneralProductForm({
+  categoryOptions,
+}: GeneralProductFormProps) {
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [isPending, startTransition] = useTransition();
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      description: '',
+      name: "",
+      description: "",
       price: 0,
       stock: 0,
-      hasVariant:false,
-      hasSize:false,
+      hasVariant: false,
+      hasSize: false,
       isFeatured: false,
-      images:[],
-      category: '',
+      images: [],
+      category: "",
     },
-  })
+  });
 
- const { 
-   fields:variantsFields,
-   replace: replaceVariants,
-   append: appendVariants,
-   remove: removeVariants,
- }=useFieldArray({
-   control:form.control,
-   name:'variants'
- })
+  const {
+    fields: variantsFields,
+    replace: replaceVariants,
+    append: appendVariants,
+    remove: removeVariants,
+  } = useFieldArray({
+    control: form.control,
+    name: "variants",
+  });
 
- const hasVariant = useWatch({
-   control:form.control,
-   name:"hasVariant",
- })
+  const hasVariant = useWatch({
+    control: form.control,
+    name: "hasVariant",
+  });
 
- 
+  const hasSize = useWatch({
+    control: form.control,
+    name: "hasSize",
+  });
 
- const hasSize = useWatch({
-   control:form.control,
-   name: "hasSize" 
- })
+  useEffect(() => {
+    if (hasSize) {
+      form.setValue("sizes", [""]); // initialise an empty size
+    } else {
+      form.setValue("sizes", []); // reset sizes when hasSize is false
+    }
+  }, [hasVariant, form, hasSize]);
 
- useEffect(()=>{
-   if(hasSize){
-     form.setValue("sizes",[""])// initialise an empty size
-   }else {
-     form.setValue("sizes",[])// reset sizes when hasSize is false
-   }
- },[hasVariant,form])
+  useEffect(() => {
+    if (hasVariant) {
+      replaceVariants([
+        {
+          name: "",
+          price: 0,
+          stock: 0,
+          color: "",
+        },
+      ]);
+    }
+  }, [hasVariant, replaceVariants]);
 
- useEffect(()=>{
-   if(hasVariant){
-     replaceVariants([
-       {
-         name:"",
-         price:0,
-         stock:0,
-         color:""
+  useEffect(() => {
+    console.log("categorie", categoryOptions);
+  }, []);
 
-     }
-     ])
-   }
- },[hasVariant,replaceVariants]);
+  //fonction to handle on submited form
+  function onSubmit(values: FormValues) {
+    console.log("VALUES_ON_SUBMITS", values);
+    startTransition(async () => {
+      const urls = [];
+      for (const url of imageUrls) {
+        const imageFile = await convertBlobUrlToFile(url);
 
- //fonction to handle on submited form
- function onSubmit(values: FormValues) {
-    console.log("VALUES_ON_SUBMITS",values)
-    startTransition(async () =>{
-     // let urls= []
-      /* for(const url of imageUrls){
-         const imageFile =await convertBlobUrlToFile(url)
+        const { imageUrl, error } = await uploadImage({
+          file: imageFile,
+          bucket: "media",
+        });
+        if (error) {
+          console.log(error);
+        }
+        urls.push(imageUrl);
+      }
+      setImageUrls([]);
+      console.log({
+        data: {
+          values,
+          imageUrls: urls,
+        },
+      });
+    });
 
-         const {imageUrl, error}= await uploadImage({
-         file: imageFile,
-         bucket:"media",
-
-         })
-         if(error) {
-           console.log(error)
-         }
-         urls.push(imageUrl)
-       } */
-      // console.log({values,urls})
-       setImageUrls([])
-    })
     /*try {
 //      const result = await createProduct(values)
 //      if (result.success) {
@@ -159,40 +163,43 @@ export default function GeneralProductForm() {
     }*/
   }
 
-
   const handleImageChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    onChange:(value:string[])=>void
+    onChange: (value: string[]) => void,
   ) => {
-    const files = e.target.files
-    console.log("IMAGR_CHANGE",files)
+    const files = e.target.files;
+    console.log("IMAGR_CHANGE", files);
     if (files) {
-      const fileArray = Array.from(files)
-      console.log("FILES_ARRAY",fileArray)
-      const newPreviewImages = fileArray.map((file) => URL.createObjectURL(file))
-      console.log("IMAGES_URLs",newPreviewImages)
-      setImageUrls((imageUrl)=> [...imageUrl, ...newPreviewImages])
-      setPreviewImages((prevImages) => [...prevImages, ...newPreviewImages])
-      const currentImages = form.getValues('images') || []
-      console.log("FORM_images", currentImages)
-      const newImageUrls = fileArray.map((file)=> file.name)
-      onChange(newImageUrls)
-      form.setValue('images', [...currentImages, ...newImageUrls])
-      console.log({"Urls":newImageUrls, imageUrls})
+      const fileArray = Array.from(files);
+      console.log("FILES_ARRAY", fileArray);
+      const newPreviewImages = fileArray.map((file) =>
+        URL.createObjectURL(file),
+      );
+      console.log("IMAGES_URLs", newPreviewImages);
+      setImageUrls((imageUrl) => [...imageUrl, ...newPreviewImages]);
+      setPreviewImages((prevImages) => [...prevImages, ...newPreviewImages]);
+      const currentImages = form.getValues("images") || [];
+      console.log("FORM_images", currentImages);
+      const newImageUrls = fileArray.map((file) => file.name);
+      onChange(newImageUrls);
+      form.setValue("images", [...currentImages, ...newImageUrls]);
+      console.log({ Urls: newImageUrls, imageUrls });
     }
-  }
+  };
 
   const removePreviewImage = (indexToRemove: number) => {
     setPreviewImages((prevImages) =>
-      prevImages.filter((_, index) => index !== indexToRemove)
-    )
-    const currentImages = form.getValues('images') || []
+      prevImages.filter((_, index) => index !== indexToRemove),
+    );
+    const currentImages = form.getValues("images") || [];
     form.setValue(
-      'images',
-      currentImages.filter((_, index) => index !== indexToRemove)
-    )
-    setImageUrls((prevUrl)=>prevUrl.filter((_,index)=> index !== indexToRemove))
-  }
+      "images",
+      currentImages.filter((_, index) => index !== indexToRemove),
+    );
+    setImageUrls((prevUrl) =>
+      prevUrl.filter((_, index) => index !== indexToRemove),
+    );
+  };
 
   return (
     <Card className="w-full p-4">
@@ -282,190 +289,197 @@ export default function GeneralProductForm() {
                 </div>
                 <FormField
                   control={form.control}
-                  name='hasSize'
-                  render={({ field })=>(
-                    <FormItem className='flex flex-row items-center space-x-3 space-y-0'>
-                      <FormControl >
+                  name="hasSize"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
                         <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
                       </FormControl>
                       <div>
-                          <FormLabel>Enable Sizes</FormLabel>
+                        <FormLabel>Enable Sizes</FormLabel>
                       </div>
                     </FormItem>
-
                   )}
                 />
                 {hasSize && (
-
-                
+                  <FormField
+                    control={form.control}
+                    name="sizes"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Sizes</FormLabel>
+                        <div className="grid grid-cols-3 gap-2">
+                          {sizeOptions.map((option) => (
+                            <FormField
+                              key={option.id}
+                              control={form.control}
+                              name="sizes"
+                              render={({ field }) => {
+                                return (
+                                  <FormItem
+                                    key={option.id}
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(
+                                          option.id,
+                                        )}
+                                        onCheckedChange={(checked) => {
+                                          const updatedSizes = checked
+                                            ? [
+                                                ...(field.value || []),
+                                                option.id,
+                                              ]
+                                            : (field.value || []).filter(
+                                                (value) => value !== option.id,
+                                              );
+                                          field.onChange(updatedSizes);
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      {option.label}
+                                    </FormLabel>
+                                  </FormItem>
+                                );
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <FormField
                   control={form.control}
-                  name="sizes"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Sizes</FormLabel>
-                      <div className="grid grid-cols-3 gap-2">
-                        {sizeOptions.map((option) => (
-                          <FormField
-                            key={option.id}
-                            control={form.control}
-                            name="sizes"
-                            render={({ field }) => {
-                              return (
-                                <FormItem
-                                  key={option.id}
-                                  className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(option.id)}
-                                      onCheckedChange={(checked) => {
-                                        const updatedSizes = checked
-                                          ? [...(field.value || []), option.id]
-                                          : (field.value || []).filter(
-                                              (value) => value !== option.id
-                                            )
-                                        field.onChange(updatedSizes)
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal">
-                                    {option.label}
-                                  </FormLabel>
-                                </FormItem>
-                              )
-                            }}
-                          />
-                        ))}
+                  name="hasVariant"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0  ">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div>
+                        <FormLabel>Add Variant</FormLabel>
                       </div>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {hasVariant && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold">Variants</h4>
+                    {variantsFields.map((variant, index) => (
+                      <div key={variant.id} className="grid grid-cols-2 gap-4">
+                        {/* Variant Name */}
+                        <FormField
+                          control={form.control}
+                          name={`variants.${index}.name`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Variant Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter variant name"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {/* Variant Price */}
+                        <FormField
+                          control={form.control}
+                          name={`variants.${index}.price`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Variant Price</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  placeholder="Enter variant price"
+                                  {...field}
+                                  onChange={(e) =>
+                                    field.onChange(parseFloat(e.target.value))
+                                  }
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {/* Variant Stock */}
+                        <FormField
+                          control={form.control}
+                          name={`variants.${index}.stock`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Variant Stock</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  placeholder="Enter stock quantity"
+                                  {...field}
+                                  onChange={(e) =>
+                                    field.onChange(parseInt(e.target.value, 10))
+                                  }
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {/* Variant Color */}
+                        <FormField
+                          control={form.control}
+                          name={`variants.${index}.color`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Variant Color</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter color" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {/* Remove Variant Button */}
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          onClick={() => removeVariants(index)}
+                          className="mt-2"
+                        >
+                          <X />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      size="icon"
+                      className="bg-green-500 rounded text-white text-center hover:bg-green-200 hover:text-gray-500"
+                      onClick={() =>
+                        appendVariants({
+                          name: "",
+                          price: 0,
+                          stock: 0,
+                          color: "",
+                        })
+                      }
+                    >
+                      <PlusCircleIcon />
+                    </Button>
+                  </div>
                 )}
-                <FormField 
-                 control={form.control}
-                 name="hasVariant"
-                 render={({ field })=>(
-                   <FormItem className='flex flex-row items-center space-x-3 space-y-0  '>
-                     <FormControl>
-                       <Checkbox 
-                         checked={field.value}
-                         onCheckedChange={field.onChange}
-                       />
-                     </FormControl>
-                     <div>
-                       <FormLabel>
-                          Add Variant
-                       </FormLabel>
-                     </div>
-                   </FormItem>
-               )}
-              />
-           
-{hasVariant && (
-  <div className="space-y-4">
-    <h4 className="text-lg font-semibold">Variants</h4>
-    {variantsFields.map((variant, index) => (
-      <div key={variant.id} className="grid grid-cols-2 gap-4">
-        {/* Variant Name */}
-        <FormField
-          control={form.control}
-          name={`variants.${index}.name`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Variant Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter variant name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {/* Variant Price */}
-        <FormField
-          control={form.control}
-          name={`variants.${index}.price`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Variant Price</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Enter variant price"
-                  {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {/* Variant Stock */}
-        <FormField
-          control={form.control}
-          name={`variants.${index}.stock`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Variant Stock</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Enter stock quantity"
-                  {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {/* Variant Color */}
-        <FormField
-          control={form.control}
-          name={`variants.${index}.color`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Variant Color</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter color" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {/* Remove Variant Button */}
-        <Button
-          type="button"
-          size="icon"
-          variant="destructive"
-          onClick={() => removeVariants(index)}
-          className="mt-2"
-        >
-          < X/> 
-        </Button>
-      </div>
-    ))}
-    <Button
-      type="button"
-      size='icon'
-      className='bg-green-500 rounded text-white text-center hover:bg-green-200 hover:text-gray-500'
-      onClick={() =>
-        appendVariants({
-          name: '',
-          price: 0,
-          stock: 0,
-          color: '',
-        })
-      }
-    >
-      <PlusCircleIcon />
-    </Button>
-  </div>
-)}
               </CardContent>
             </Card>
 
@@ -490,21 +504,23 @@ export default function GeneralProductForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categoryOptions.map((category) => (
-                            <SelectItem
-                              key={category.value}
-                              value={category.value}
-                            >
-                              {category.label}
+                          {categoryOptions && categoryOptions.length > 0 ? (
+                            categoryOptions.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="" disabled>
+                              No categories available
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-
+                />{" "}
                 <FormField
                   control={form.control}
                   name="isFeatured"
@@ -525,7 +541,6 @@ export default function GeneralProductForm() {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="images"
@@ -539,9 +554,7 @@ export default function GeneralProductForm() {
                           multiple
                           className=" w-full   text-center "
                           onChange={(e) => {
-                            
-                            handleImageChange(e, field.onChange)// pass the field.onchange to sync the form 
-                            
+                            handleImageChange(e, field.onChange); // pass the field.onchange to sync the form
                           }}
                         />
                       </FormControl>
@@ -575,14 +588,25 @@ export default function GeneralProductForm() {
             </Card>
             <div></div>
             <div className="flex w-full justify-end space-x-4 items-center gap-4">
-              <Button variant='outline' className='text-black ' type="button" disabled={isPending}>Cancel</Button>
-              <Button disabled={isPending} type="submit" className='bg-brand-primary text-md font-bold'>
-              { isPending ? " Creating ... " : " Create Product"} 
+              <Button
+                variant="outline"
+                className="text-black "
+                type="button"
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={isPending}
+                type="submit"
+                className="bg-brand-primary text-md font-bold"
+              >
+                {isPending ? " Creating ... " : " Create Product"}
               </Button>
             </div>
           </form>
         </Form>
       </CardContent>
     </Card>
-  )
+  );
 }
