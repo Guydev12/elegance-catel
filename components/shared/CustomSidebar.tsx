@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import { ChevronRight, ShoppingBag } from 'lucide-react'
+import * as React from "react";
+import { ChevronRight, ShoppingBag } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,14 +11,14 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+} from "@/components/ui/breadcrumb";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
+} from "@/components/ui/collapsible";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -33,29 +33,39 @@ import {
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
-} from '@/components/ui/sidebar'
-import { navItems } from '@/lib/constant'
-import AppLogo from '@/components/shared/AppLogo'
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
-
-import { UserEntity } from '@/types'
+} from "@/components/ui/sidebar";
+import { navItems } from "@/lib/constant";
+import AppLogo from "@/components/shared/AppLogo";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { User } from "@prisma/client";
 
 type PropOptions = {
-  children: React.ReactNode
-  user: UserEntity
-}
+  children: React.ReactNode;
+  user: User;
+};
+const pathMapping: Record<string, string> = {
+  //Record is used to create a new type that map key
+  "/admin/products/categories": "Category",
+  "/admin/products/categories/new": "Category",
+  "/admin/products/new": "Products",
+  "/admin/products": "Products",
+};
+export const CustomSidebar: React.FC<PropOptions> = ({ children, user }) => {
+  const username = user?.username;
+  const userImage = user?.avatar;
+  const fallBackImage = username?.charAt(0).toUpperCase();
 
-export const CustomSidebar: React.FC<PropOptions> = ({ children,user }) => {
-  const username = user?.username
-  const userImage = user?.avatar
-  const fallBackImage = username?.charAt(0).toUpperCase()
-
-  const pathname = usePathname()
-  const lastUrl = pathname.split('/').pop()
+  const pathname = usePathname();
+  const lastUrl = pathname.split("/").pop();
   const currentPathName = lastUrl
     ? lastUrl.charAt(0).toUpperCase() + lastUrl.slice(1)
-    : ''
+    : "";
+  const renderName = () => {
+    return (
+      <p className="font-bold">{pathMapping[pathname] || currentPathName}</p>
+    );
+  };
   return (
     <SidebarProvider>
       <Sidebar>
@@ -68,7 +78,7 @@ export const CustomSidebar: React.FC<PropOptions> = ({ children,user }) => {
                 </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
-           </SidebarMenu>
+          </SidebarMenu>
           <form>
             <SidebarGroup className="py-0">
               <SidebarGroupContent className="relative">
@@ -109,9 +119,9 @@ export const CustomSidebar: React.FC<PropOptions> = ({ children,user }) => {
                                 <SidebarMenuButton
                                   asChild
                                   className={`${
-                                    pathname === item.url 
-                                      ? 'bg-pink-300 text-brand-primary font-bold'
-                                      : ''
+                                    pathname === item.url
+                                      ? "bg-pink-300 text-brand-primary font-bold"
+                                      : ""
                                   }`}
                                 >
                                   <Link
@@ -131,8 +141,8 @@ export const CustomSidebar: React.FC<PropOptions> = ({ children,user }) => {
                         asChild
                         className={`${
                           pathname === item.url
-                            ? 'bg-pink-300 text-brand-primary font-bold'
-                            : ''
+                            ? "bg-pink-300 text-brand-primary font-bold"
+                            : ""
                         }`}
                       >
                         <Link href={item.url} className="flex items-center">
@@ -157,12 +167,12 @@ export const CustomSidebar: React.FC<PropOptions> = ({ children,user }) => {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
-         </BreadcrumbItem>
+                  <BreadcrumbLink href="/admin/">Dashboard</BreadcrumbLink>
+                </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbPage className="font-bold">
-                    {currentPathName}
+                    {renderName()}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
@@ -170,14 +180,14 @@ export const CustomSidebar: React.FC<PropOptions> = ({ children,user }) => {
           </div>
           <div className="flex items-center gap-4 ">
             <h5>{username}</h5>
-          <Avatar>
-            <AvatarImage src={userImage} alt="@shadcn" />
-            <AvatarFallback>{fallBackImage}</AvatarFallback>
-          </Avatar>
+            <Avatar>
+              <AvatarImage src={userImage as string} alt="@shadcn" />
+              <AvatarFallback>{fallBackImage}</AvatarFallback>
+            </Avatar>
           </div>
         </header>
         <main>{children}</main>
       </SidebarInset>
     </SidebarProvider>
-  )
-}
+  );
+};

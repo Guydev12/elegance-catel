@@ -8,7 +8,7 @@ import Image from "next/image";
 import { PlusCircleIcon, X } from "lucide-react";
 import { convertBlobUrlToFile } from "@/lib/supabase-client";
 import { uploadImage } from "@/lib/actions/supabase.actions";
-
+import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -36,12 +36,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Category } from "@prisma/client";
-//import { createProduct } from '@/lib/actions/product.actions'
+import { createProduct } from "@/lib/actions/product.actions";
 import { ProductSchema } from "@/types";
 
-export const formSchema = ProductSchema;
 
-type FormValues = z.infer<typeof formSchema>;
+
+type FormValues = z.infer<typeof ProductSchema>;
 
 const sizeOptions = [
   { id: "xs", label: "XS" },
@@ -62,7 +62,7 @@ export default function GeneralProductForm({
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(ProductSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -117,15 +117,11 @@ export default function GeneralProductForm({
     }
   }, [hasVariant, replaceVariants]);
 
-  useEffect(() => {
-    console.log("categorie", categoryOptions);
-  }, []);
-
   //fonction to handle on submited form
   function onSubmit(values: FormValues) {
     console.log("VALUES_ON_SUBMITS", values);
     startTransition(async () => {
-      const urls = [];
+      const urls: string[] = [];
       for (const url of imageUrls) {
         const imageFile = await convertBlobUrlToFile(url);
 
@@ -145,22 +141,24 @@ export default function GeneralProductForm({
           imageUrls: urls,
         },
       });
-    });
 
-    /*try {
-//      const result = await createProduct(values)
-//      if (result.success) {
-  //      form.reset()
-    //    setPreviewImages([])
-      //  setImageUrls([])
-        // Show success message
-      } else {
+      try {
+        const result = await createProduct(urls, values);
+        if (result.success) {
+          form.reset();
+          setPreviewImages([]);
+          setImageUrls([]);
+          // Show success message
+          toast.success(result?.message as string);
+        } else if (result.error) {
+          // Show error message
+          toast.error(result.error);
+        }
+      } catch (error) {
+        console.error("Error creating product:", error);
         // Show error message
       }
-    } catch (error) {
-      console.error('Error creating product:', error)
-      // Show error message
-    }*/
+    });
   }
 
   const handleImageChange = (
@@ -511,7 +509,7 @@ export default function GeneralProductForm({
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="" disabled>
+                            <SelectItem value="no-categories" disabled>
                               No categories available
                             </SelectItem>
                           )}

@@ -4,6 +4,8 @@ import { Product } from "@prisma/client";
 
 import { ColumnDef } from "@tanstack/react-table";
 import { CellAction } from "./cell-action";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -15,8 +17,40 @@ export type CategoriesProps = {
 
 export const CategoryColumns: ColumnDef<CategoriesProps>[] = [
   {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
     accessorKey: "name",
-    header: "Name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Name
+        </Button>
+      );
+    },
   },
   {
     accessorKey: "products",
@@ -28,7 +62,7 @@ export const CategoryColumns: ColumnDef<CategoriesProps>[] = [
   },
   {
     id: "actions",
-        header:"Actions",
-        cell: ({ row }) => <CellAction data={row.original} />,
+    header: "Actions",
+    cell: ({ row }) => <CellAction data={row.original} />,
   },
 ];

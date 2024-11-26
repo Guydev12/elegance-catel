@@ -14,6 +14,7 @@ const page = () => {
       Welcome To The Elegance Dashboard
     </p>}
     description='Press Login to continue'
+            className='justify-center items-center'
     >
       
       <div className='mt-4 flex grow flex-col gap-4  justify-center space-y-5'>

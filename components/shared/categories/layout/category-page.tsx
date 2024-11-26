@@ -6,7 +6,11 @@ const CategoryPage = async () => {
   const categories = await getAllCategories();
   return (
     <>
-      <DataTable columns={CategoryColumns} data={categories} />
+      <DataTable
+        columns={CategoryColumns}
+        data={categories}
+        message="No Category."
+      />
     </>
   );
 };

@@ -19,17 +19,18 @@ const ProductHeader = () => {
       return <h2 className="font-bold">Add New Product</h2>;
     } else if (pathname === "/admin/products/categories/new") {
       return <h2 className="font-bold">Create Category</h2>;
+    } else if (pathname.includes("/admin/products/categories")) {
+      return <h2 className="font-bold">Edit Category</h2>;
     } else {
       return <h2 className="font-bold">{title}</h2>;
     }
   };
   return (
-    <header className="flex flex-row itmes-center justify-between m-4 p-4 w-full bg-background text-foreground gap-4 ">
+    <header className="flex flex-row items-center justify-between m-4 p-4 w-full bg-background text-foreground gap-4">
       <div>{renderTitle()}</div>
-      <div className="flex flex-row space-x-4 items-center ">
+      <div className="flex flex-row space-x-4 items-center ml-auto">
         {title === "Products" && (
           <>
-            <Button variant="outline">filter by</Button>
             <Button asChild className="bg-brand-primary font-bold">
               <Link href="/admin/products/new">
                 <PlusIcon aria-label="add products" />
@@ -39,10 +40,9 @@ const ProductHeader = () => {
           </>
         )}
       </div>
-      <div className="flex flex-row space-x-4 items-center ">
+      <div className="flex flex-row space-x-4 items-center ml-auto">
         {title === "Categories" && (
           <>
-            <Button variant="outline">filter by</Button>
             <Button asChild className="bg-brand-primary font-bold">
               <Link href="/admin/products/categories/new">
                 <PlusIcon aria-label="create category" />

@@ -1,75 +1,309 @@
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
-import prisma from '../prisma'
-import supabase from '../supabase'
-import { formSchema } from '@/components/shared/products/general-product-form'
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import prisma from "../prisma";
+import { ProductSchema } from "@/types";
+import { getUserById } from "./user.actions";
+import { auth } from "@/auth";
 
-// Initialize Supabase client
 
-export async function createProduct(data: z.infer<typeof formSchema>) {
+
+
+type ProductData = {
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  isFeatured: boolean;
+  categoryId: string;
+  images: {
+    create: { imageUrl: string }[];
+  };
+  sizes?: {
+    create: { size: string }[];
+  };
+  variants?: {
+    create: {
+      name: string;
+      price: number;
+      stock: number;
+      color: string;
+    }[];
+  };
+};
+
+export async function createProduct(
+  imageUrls: string[],
+  data: z.infer<typeof ProductSchema>,
+) {
   try {
     // Validate the input data
-    const validatedData = formSchema.parse(data)
+    const validatedFields = ProductSchema.safeParse(data);
 
-    // Handle image uploads
-    const imageUrls: string[] = []
-    if (validatedData.images && validatedData.images.length > 0) {
-      for (const image of validatedData.images) {
-        const fileExt = image.name.split('.').pop()
-        const fileName = `${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}.${fileExt}`
+    if (!validatedFields.success) {
+      return {
+        success: false,
+        error: "Invalid fields",
+        details: validatedFields.error.flatten().fieldErrors,
+      };
+    }
 
-        const { error: uploadError } = await supabase.storage
-          .from('products')
-          .upload(fileName, image)
+    const {
+      name,
+      description,
+      price,
+      stock,
+    
+      isFeatured = false,
+      category,
+      hasSize,
+      hasVariant,
+    } = validatedFields.data;
 
-        if (uploadError) {
-          throw new Error(`Failed to upload image: ${uploadError.message}`)
-        }
+    const sizes = hasSize ? validatedFields.data.sizes : [];
+    const variants = hasVariant ? validatedFields.data.variants : [];
 
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from('products').getPublicUrl(fileName)
+    // Create the base product data
+    const productData: ProductData = {
+      name,
+      description,
+      price,
+      stock,
+      isFeatured,
+      categoryId: category,
+      images: {
+        create: imageUrls.map((url) => ({
+          imageUrl: url,
+        })),
+      },
+    };
 
-        imageUrls.push(publicUrl)
-      }
+    // Add sizes if applicable
+    if (hasSize && sizes.length > 0) {
+      productData.sizes = {
+        create: sizes.map((size) => ({
+          size,
+        })),
+      };
+    }
+
+    // Add variants if applicable
+    if (hasVariant && variants.length > 0) {
+      productData.variants = {
+        create: variants.map((variant) => ({
+          name: variant.name,
+          price: variant.price,
+          stock: variant.stock,
+          color: variant.color,
+        })),
+      };
     }
 
     // Create the product in the database
     const product = await prisma.product.create({
-      data: {
-        name: validatedData.name,
-        description: validatedData.description,
-        price: validatedData.price,
-        stock: validatedData.stock,
-        isFeatured: validatedData.isFeatured,
-        categoryId: validatedData.category, // Assuming category is the ID
-        // sizes: validatedData.sizes,
-        images: {
-          create: imageUrls.map((url) => ({ url })),
-        },
-      },
+      data: productData,
       include: {
         images: true,
         category: true,
+        sizes: true,
+        variants: true,
       },
-    })
+    });
 
-    revalidatePath('/products') // Revalidate the products page
-
-    return { success: true, data: product }
+    revalidatePath("/products");
+    return {
+      success: true,
+      message: "Product created successfully",
+      data: product,
+    };
   } catch (error) {
-    console.error('Error creating product:', error)
+    console.error("Error creating product:", error);
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: 'Invalid product data',
+        error: "Invalid product data",
         details: error.errors,
-      }
+      };
     }
-    return { success: false, error: 'Failed to create product' }
+    return { success: false, error: "Failed to create product" };
+  }
+}
+
+export async function getAllProducts() {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        category: true,
+        images: true,
+        variants: true,
+        sizes: true,
+        orders: {
+          include: {
+            order: true,
+          },
+        },
+      },
+    });
+    return products;
+  } catch (error) {
+    console.log("PRODUCT_GET_ALL_ERROR", error);
+    throw error;
+  }
+}
+
+
+export async function editProduct(
+  imageUrls: string[],
+  id: string,
+  value: z.infer<typeof ProductSchema>,
+) {
+  const session = await auth();
+  if (!session?.user) {
+    return { authError: "Unauthorized" };
+  }
+
+  const candidate = await getUserById(session.user.id);
+  if (!candidate?.isAdmin) {
+    return { authError: "Unauthorized" };
+  }
+
+  const validatedFields = ProductSchema.safeParse(value);
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      error: "Invalid fields",
+      details: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    const {
+      name,
+      description,
+      price,
+      stock,
+      hasSize,
+      images,
+      hasVariant,
+      category,
+      isFeatured = false,
+    } = validatedFields.data;
+
+    // Extract sizes and variants conditionally
+    const sizes = hasSize ? validatedFields.data.sizes ?? [] : [];
+    const variants = hasVariant ? validatedFields.data.variants ?? [] : [];
+
+    // Extend product data with conditional types
+// Create the base product data
+    const productData: ProductData = {
+      name,
+      description,
+      price,
+      stock,
+      isFeatured,
+      categoryId: category,
+      images: {
+        create: images.map((url) => ({
+          imageUrl: url,
+        })),
+      },
+    };
+
+        // Add images if provided
+    if (imageUrls.length > 0) {
+      productData.images = {
+        create: imageUrls.map((url) => ({
+          imageUrl: url,
+        })),
+      };
+    }
+
+    // Add sizes if applicable
+    if (hasSize) {
+      productData.sizes = {
+        create: sizes.map((size) => ({ size })),
+      };
+    }
+
+    // Add variants if applicable
+    if (hasVariant) {
+      productData.variants = {
+        create: variants.map((variant) => ({
+          name: variant.name,
+          price: variant.price,
+          stock: variant.stock,
+          color: variant.color,
+        })),
+      };
+    }
+
+    // Update product in the database
+    const product = await prisma.product.update({
+      where: { id },
+      data: productData,
+      include: {
+        images: true,
+        category: true,
+        sizes: true,
+        variants: true,
+      },
+    });
+
+    revalidatePath("/products");
+    return {
+      success: true,
+      message: "Product updated successfully",
+      data: product,
+    };
+  } catch (error) {
+    console.error("EDIT_PRODUCT_ERROR", error);
+    return {
+      success: false,
+      error: "Failed to update product",
+    };
+  }
+}
+export async function getProductById(id: string) {
+  try {
+    const product = await prisma.product.findFirst({
+      where: { id },
+      include: {
+        category: true,
+        variants: true,
+        sizes: true,
+        images: true,
+        orders: true,
+      },
+    });
+    return product;
+  } catch (error) {
+    console.log("PRODUCT_GET_SINGLE_ERROR", error);
+    throw error;
+  }
+}
+
+export async function deleteProduct(id: string) {
+  const session = await auth();
+  if (!session) {
+    return { authError: "Unauthorized" };
+  } else if (session && !session.user) {
+    return { authError: "Unauthorized" };
+  }
+
+  const candidate = await getUserById(session?.user?.id);
+  const isAdmin = candidate?.isAdmin;
+
+  if (!isAdmin) {
+    return { authError: "Unauthorized" };
+  }
+  try {
+    await prisma.product.delete({
+      where: { id },
+    });
+    return { success: "product Deleted" };
+  } catch (err) {
+    console.log(err);
+    return { error: "Failed to delete product" };
   }
 }
