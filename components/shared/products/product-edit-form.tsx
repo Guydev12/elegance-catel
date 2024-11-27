@@ -36,8 +36,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Category } from "@prisma/client";
-import { createProduct } from "@/lib/actions/product.actions";
-import { ProductSchema } from "@/types";
+import { editProduct } from "@/lib/actions/product.actions";
+import { ProductDto, ProductSchema } from "@/types";
 
 type FormValues = z.infer<typeof ProductSchema>;
 
@@ -49,28 +49,36 @@ const sizeOptions = [
   { id: "xl", label: "XL" },
   { id: "xxl", label: "XXL" },
 ];
-type GeneralProductFormProps = {
+
+type EditProductFormProps = {
   categoryOptions: Category[];
+  product: ProductDto;
 };
 
-export default function GeneralProductForm({
+export default function EditProductForm({
   categoryOptions,
-}: GeneralProductFormProps) {
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  product,
+}: EditProductFormProps) {
+  const [previewImages, setPreviewImages] = useState<string[]>(
+    product.images.map((item) => item.imageUrl),
+  );
+  const [imageUrls, setImageUrls] = useState<string[]>(
+    product.images.map((item) => item.imageUrl),
+  );
   const [isPending, startTransition] = useTransition();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(ProductSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      price: 0,
-      stock: 0,
-      hasVariant: false,
-      hasSize: false,
-      isFeatured: false,
-      images: [],
-      category: "",
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock,
+      category: product.category.id,
+      hasSize: product.sizes.length > 0 ? true : false,
+      hasVariant: product.variants.length > 0 ? true : false,
+      images: product.images.map((item) => item.imageUrl),
+      isFeatured: product.isFeatured,
     },
   });
 
@@ -96,65 +104,52 @@ export default function GeneralProductForm({
 
   useEffect(() => {
     if (hasSize) {
-      form.setValue("sizes", [""]); // initialise an empty size
+      form.setValue(
+        "sizes",
+        product.sizes.map((item) => item.size),
+      );
     } else {
-      form.setValue("sizes", []); // reset sizes when hasSize is false
+      form.setValue("sizes", []);
     }
-  }, [hasVariant, form, hasSize]);
+  }, [hasSize, form, product.sizes]);
 
   useEffect(() => {
-    if (hasVariant) {
-      replaceVariants([
-        {
-          name: "",
-          price: 0,
-          stock: 0,
-          color: "",
-        },
-      ]);
+    if (hasVariant && product.variants) {
+      replaceVariants(product.variants);
+    } else {
+      replaceVariants([]);
     }
-  }, [hasVariant, replaceVariants]);
+  }, [hasVariant, replaceVariants, product.variants]);
 
-  //fonction to handle on submited form
   function onSubmit(values: FormValues) {
-    console.log("VALUES_ON_SUBMITS", values);
     startTransition(async () => {
       const urls: string[] = [];
       for (const url of imageUrls) {
-        const imageFile = await convertBlobUrlToFile(url);
-
-        const { imageUrl, error } = await uploadImage({
-          file: imageFile,
-          bucket: "media",
-        });
-        if (error) {
-          console.log(error);
+        if (url.startsWith("blob:")) {
+          const imageFile = await convertBlobUrlToFile(url);
+          const { imageUrl, error } = await uploadImage({
+            file: imageFile,
+            bucket: "media",
+          });
+          if (error) {
+            console.log(error);
+          }
+          urls.push(imageUrl);
+        } else {
+          urls.push(url); // Keep existing image URLs
         }
-        urls.push(imageUrl);
       }
-      setImageUrls([]);
-      console.log({
-        data: {
-          values,
-          imageUrls: urls,
-        },
-      });
 
       try {
-        const result = await createProduct(urls, values);
+        const result = await editProduct(urls, product.id, values);
         if (result.success) {
-          form.reset();
-          setPreviewImages([]);
-          setImageUrls([]);
-          // Show success message
           toast.success(result?.message as string);
         } else if (result.error) {
-          // Show error message
           toast.error(result.error);
         }
       } catch (error) {
-        console.error("Error creating product:", error);
-        // Show error message
+        console.error("Error updating product:", error);
+        toast.error("An error occurred while updating the product");
       }
     });
   }
@@ -164,22 +159,17 @@ export default function GeneralProductForm({
     onChange: (value: string[]) => void,
   ) => {
     const files = e.target.files;
-    console.log("IMAGR_CHANGE", files);
     if (files) {
       const fileArray = Array.from(files);
-      console.log("FILES_ARRAY", fileArray);
       const newPreviewImages = fileArray.map((file) =>
         URL.createObjectURL(file),
       );
-      console.log("IMAGES_URLs", newPreviewImages);
-      setImageUrls((imageUrl) => [...imageUrl, ...newPreviewImages]);
+
+      setImageUrls((prevUrls) => [...prevUrls, ...newPreviewImages]);
       setPreviewImages((prevImages) => [...prevImages, ...newPreviewImages]);
       const currentImages = form.getValues("images") || [];
-      console.log("FORM_images", currentImages);
       const newImageUrls = fileArray.map((file) => file.name);
-      onChange(newImageUrls);
-      form.setValue("images", [...currentImages, ...newImageUrls]);
-      console.log({ Urls: newImageUrls, imageUrls });
+      onChange([...currentImages, ...newImageUrls]);
     }
   };
 
@@ -187,24 +177,26 @@ export default function GeneralProductForm({
     setPreviewImages((prevImages) =>
       prevImages.filter((_, index) => index !== indexToRemove),
     );
+    setImageUrls((prevUrls) =>
+      prevUrls.filter((_, index) => index !== indexToRemove),
+    );
     const currentImages = form.getValues("images") || [];
     form.setValue(
       "images",
       currentImages.filter((_, index) => index !== indexToRemove),
     );
-    setImageUrls((prevUrl) =>
-      prevUrl.filter((_, index) => index !== indexToRemove),
-    );
   };
 
   return (
     <Card className="w-full p-4">
-      <CardHeader></CardHeader>
+      <CardHeader>
+        <CardDescription>Edit Product</CardDescription>
+      </CardHeader>
       <CardContent className="w-full">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-8 grid grid-cols-1 lg:grid-cols-2 w-full "
+            className="space-y-8 grid grid-cols-1 lg:grid-cols-2 w-full"
           >
             <Card className="p-4">
               <CardHeader>
@@ -283,6 +275,7 @@ export default function GeneralProductForm({
                     )}
                   />
                 </div>
+
                 <FormField
                   control={form.control}
                   name="hasSize"
@@ -300,6 +293,7 @@ export default function GeneralProductForm({
                     </FormItem>
                   )}
                 />
+
                 {hasSize && (
                   <FormField
                     control={form.control}
@@ -351,11 +345,12 @@ export default function GeneralProductForm({
                     )}
                   />
                 )}
+
                 <FormField
                   control={form.control}
                   name="hasVariant"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0  ">
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
@@ -374,7 +369,6 @@ export default function GeneralProductForm({
                     <h4 className="text-lg font-semibold">Variants</h4>
                     {variantsFields.map((variant, index) => (
                       <div key={variant.id} className="grid grid-cols-2 gap-4">
-                        {/* Variant Name */}
                         <FormField
                           control={form.control}
                           name={`variants.${index}.name`}
@@ -391,7 +385,6 @@ export default function GeneralProductForm({
                             </FormItem>
                           )}
                         />
-                        {/* Variant Price */}
                         <FormField
                           control={form.control}
                           name={`variants.${index}.price`}
@@ -412,7 +405,6 @@ export default function GeneralProductForm({
                             </FormItem>
                           )}
                         />
-                        {/* Variant Stock */}
                         <FormField
                           control={form.control}
                           name={`variants.${index}.stock`}
@@ -433,7 +425,6 @@ export default function GeneralProductForm({
                             </FormItem>
                           )}
                         />
-                        {/* Variant Color */}
                         <FormField
                           control={form.control}
                           name={`variants.${index}.color`}
@@ -447,7 +438,6 @@ export default function GeneralProductForm({
                             </FormItem>
                           )}
                         />
-                        {/* Remove Variant Button */}
                         <Button
                           type="button"
                           size="icon"
@@ -479,7 +469,7 @@ export default function GeneralProductForm({
               </CardContent>
             </Card>
 
-            <Card className="p-4  border-none">
+            <Card className="p-4 border-none">
               <CardHeader>
                 <CardDescription>Upload Images</CardDescription>
               </CardHeader>
@@ -496,7 +486,10 @@ export default function GeneralProductForm({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
+                            <SelectValue
+                              placeholder="Select a category"
+                              defaultValue={field.value}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -516,7 +509,7 @@ export default function GeneralProductForm({
                       <FormMessage />
                     </FormItem>
                   )}
-                />{" "}
+                />
                 <FormField
                   control={form.control}
                   name="isFeatured"
@@ -548,9 +541,9 @@ export default function GeneralProductForm({
                           type="file"
                           accept="image/*"
                           multiple
-                          className=" w-full   text-center "
+                          className="w-full text-center"
                           onChange={(e) => {
-                            handleImageChange(e, field.onChange); // pass the field.onchange to sync the form
+                            handleImageChange(e, field.onChange);
                           }}
                         />
                       </FormControl>
@@ -572,7 +565,7 @@ export default function GeneralProductForm({
                         type="button"
                         size="icon"
                         variant="destructive"
-                        className="absolute top-0 right-0 p-1  text-white rounded-full"
+                        className="absolute top-0 right-0 p-1 text-white rounded-full"
                         onClick={() => removePreviewImage(index)}
                       >
                         <X size={16} />
@@ -586,7 +579,7 @@ export default function GeneralProductForm({
             <div className="flex w-full justify-end space-x-4 items-center gap-4">
               <Button
                 variant="outline"
-                className="text-black "
+                className="text-black"
                 type="button"
                 disabled={isPending}
               >
@@ -597,7 +590,7 @@ export default function GeneralProductForm({
                 type="submit"
                 className="bg-brand-primary text-md font-bold"
               >
-                {isPending ? " Creating ... " : " Create Product"}
+                {isPending ? "Updating..." : "Update Product"}
               </Button>
             </div>
           </form>

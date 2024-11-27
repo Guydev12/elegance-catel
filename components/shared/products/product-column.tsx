@@ -59,7 +59,6 @@ export const ProductColumns: ColumnDef<ProductsProps>[] = [
   },
   {
     id: "images",
-    header: "Image",
     cell: ({ row }) => {
       const images = row.original.images;
       console.log(images);
@@ -67,11 +66,12 @@ export const ProductColumns: ColumnDef<ProductsProps>[] = [
         return <div>No image</div>;
       }
       return (
-        <div className="relative w-[50px] h-[50px]">
+        <div className="relative w-[40px] h-[40px]">
           <Image
             src={images[0].imageUrl || "/logo.jpg"}
             alt={row.original.name}
             fill
+            sizes="40px"
             className="object-cover rounded-md"
           />
         </div>
@@ -111,7 +111,13 @@ export const ProductColumns: ColumnDef<ProductsProps>[] = [
     header: "Stock",
     cell: ({ row }) => (
       <div className="font-medium">
-        {row.original.stock > 0 ? row.original.stock : "Out of stock"}
+        {row.original.stock > 0 ? (
+          row.original.stock
+        ) : (
+          <div className=" text-center p-[4px] text-red-600 bg-red-200 rounded-md text-[9px]">
+            Out of stock
+          </div>
+        )}
       </div>
     ),
   },
@@ -119,7 +125,15 @@ export const ProductColumns: ColumnDef<ProductsProps>[] = [
     accessorKey: "featured",
     header: "Featured",
     cell: ({ row }) => (
-      <div className="font-medium">{row.original.featured ? "Yes" : "No"}</div>
+      <div className="font-medium">
+        {row.original.featured ? (
+          <div className="rounde-md text-green-800 border-green-500 bg-green-100 text-center p-[2px] ">
+            Yes
+          </div>
+        ) : (
+          <div className="text-red-900 border-red-500 bg-red-100 text-center p-[2px] ">No</div>
+        )}
+      </div>
     ),
   },
   {

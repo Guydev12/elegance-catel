@@ -19,38 +19,37 @@ const ProductHeader = () => {
       return <h2 className="font-bold">Add New Product</h2>;
     } else if (pathname === "/admin/products/categories/new") {
       return <h2 className="font-bold">Create Category</h2>;
-    } else if (pathname.includes("/admin/products/categories")) {
+    } else if (pathname.includes("/admin/products/categories/edit")) {
       return <h2 className="font-bold">Edit Category</h2>;
     } else {
       return <h2 className="font-bold">{title}</h2>;
     }
   };
   return (
-    <header className="flex flex-row items-center justify-between m-4 p-4 w-full bg-background text-foreground gap-4">
-      <div>{renderTitle()}</div>
-      <div className="flex flex-row space-x-4 items-center ml-auto">
-        {title === "Products" && (
-          <>
+    <header className="w-full border-b bg-background">
+      <div className="container flex h-16 items-center justify-between px-4">
+        <div>{renderTitle()}</div>
+        <div>
+          {title === "Products" && (
             <Button asChild className="bg-brand-primary font-bold">
               <Link href="/admin/products/new">
-                <PlusIcon aria-label="add products" />
+                <PlusIcon className="mr-2 h-4 w-4" aria-label="add products" />
                 Add
               </Link>
             </Button>
-          </>
-        )}
-      </div>
-      <div className="flex flex-row space-x-4 items-center ml-auto">
-        {title === "Categories" && (
-          <>
+          )}
+          {title === "Categories" && (
             <Button asChild className="bg-brand-primary font-bold">
               <Link href="/admin/products/categories/new">
-                <PlusIcon aria-label="create category" />
+                <PlusIcon
+                  className="mr-2 h-4 w-4"
+                  aria-label="create category"
+                />
                 Create
               </Link>
             </Button>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </header>
   );

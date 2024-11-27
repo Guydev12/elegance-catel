@@ -11,16 +11,19 @@ import {
 
 import { MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "react-hot-toast";
 import { deleteProduct } from "@/lib/actions/product.actions";
 import { ProductsProps } from "./product-column";
+import { AlertModal } from "@/components/ui/alert-modal";
 
 type CellActionProps = {
   data: ProductsProps;
 };
 export function CellAction({ data }: CellActionProps) {
   const [isPending, startTransition] = useTransition();
+  const [showModal, setShowModal] = useState(false);
+
   const router = useRouter();
   console.log(isPending);
   const onDelete = () => {
@@ -37,32 +40,55 @@ export function CellAction({ data }: CellActionProps) {
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem
-          onClick={() => {
-            router.push(`/admin/products/${data.id}/edit`);
-          }}
-        >
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>View</DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-red-600 hover:bg-red-200 hover:text-red-600"
-          onClick={onDelete}
-        >
-          {" "}
-          Delete{" "}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <AlertModal
+        open={showModal}
+        onOpenChange={setShowModal}
+        title="Confirm Delete"
+        description="Are you sure you want to delete this product? This action cannot be undone."
+        confirmText={isPending ? "Deleting..." : "Confirm"}
+        cancelText="Cancel"
+        onConfirm={() => {
+          setShowModal(false); // Close modal
+          onDelete(); // Execute delete action
+        }}
+      />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem
+            onClick={() => {
+              router.push(`/admin/products/${data.id}/edit`);
+            }}
+          >
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              router.push(`/admin/products/${data.id}`);
+            }}
+          >
+            View
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-red-600 hover:bg-red-200 hover:text-red-600"
+            onClick={() => {
+              setShowModal(true);
+            }}
+          >
+            {" "}
+            Delete{" "}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }

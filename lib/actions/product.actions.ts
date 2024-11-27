@@ -7,9 +7,6 @@ import { ProductSchema } from "@/types";
 import { getUserById } from "./user.actions";
 import { auth } from "@/auth";
 
-
-
-
 type ProductData = {
   name: string;
   description: string;
@@ -54,7 +51,7 @@ export async function createProduct(
       description,
       price,
       stock,
-    
+
       isFeatured = false,
       category,
       hasSize,
@@ -152,7 +149,6 @@ export async function getAllProducts() {
   }
 }
 
-
 export async function editProduct(
   imageUrls: string[],
   id: string,
@@ -184,69 +180,127 @@ export async function editProduct(
       price,
       stock,
       hasSize,
-      images,
+
       hasVariant,
       category,
-      isFeatured = false,
+      isFeatured,
     } = validatedFields.data;
 
     // Extract sizes and variants conditionally
-    const sizes = hasSize ? validatedFields.data.sizes ?? [] : [];
-    const variants = hasVariant ? validatedFields.data.variants ?? [] : [];
+    const sizes = hasSize ? (validatedFields.data.sizes ?? []) : [];
+    const variants = hasVariant ? (validatedFields.data.variants ?? []) : [];
 
     // Extend product data with conditional types
-// Create the base product data
-    const productData: ProductData = {
-      name,
-      description,
-      price,
-      stock,
-      isFeatured,
-      categoryId: category,
-      images: {
-        create: images.map((url) => ({
-          imageUrl: url,
-        })),
-      },
-    };
+    // Create the base product data
+    //const productData: ProductData = {
+    //  name,
+    //  description,
+    //  price,
+    //  stock,
+    //  isFeatured,
+    //  categoryId: category,
+    //  images: {
+    //     deleteMany:{}
+    // },
+    //};
 
-        // Add images if provided
-    if (imageUrls.length > 0) {
-      productData.images = {
-        create: imageUrls.map((url) => ({
-          imageUrl: url,
-        })),
-      };
-    }
+    //    // Add images if provided
+    //if (imageUrls.length > 0) {
+    //
+    //  productData.images = {
+    //    create: imageUrls.map((url) => ({
+    //      imageUrl: url,
+    //    })),
+    //  };
+    //}
 
-    // Add sizes if applicable
+    //// Add sizes if applicable
     if (hasSize) {
-      productData.sizes = {
-        create: sizes.map((size) => ({ size })),
-      };
+      await prisma.product.update({
+        where: { id },
+        data: {
+          sizes: {
+            create: sizes.map((size) => ({ size })),
+          },
+        },
+      });
+    } else {
+      await prisma.product.update({
+        where: { id },
+        data: {
+          sizes: {
+            deleteMany: {},
+          },
+        },
+      });
     }
 
     // Add variants if applicable
-    if (hasVariant) {
-      productData.variants = {
-        create: variants.map((variant) => ({
-          name: variant.name,
-          price: variant.price,
-          stock: variant.stock,
-          color: variant.color,
-        })),
-      };
+    if (hasVariant && variants.length > 0) {
+      await prisma.product.update({
+        where: { id },
+        data: {
+          variants: {
+            deleteMany: {},
+          },
+        },
+      });
+    }
+    if (hasVariant && variants.length > 0) {
+      await prisma.product.update({
+        where: { id },
+        data: {
+          variants: {
+            create: variants.map((variant) => ({
+              name: variant.name,
+              price: variant.price,
+              stock: variant.stock,
+              color: variant.color,
+            })),
+          },
+        },
+      });
+    } else {
+      await prisma.product.update({
+        where: { id },
+        data: {
+          variants: {
+            deleteMany: {},
+          },
+        },
+      });
     }
 
     // Update product in the database
-    const product = await prisma.product.update({
+    await prisma.product.update({
       where: { id },
-      data: productData,
+      data: {
+        name,
+        description,
+        price,
+        stock,
+        isFeatured,
+        categoryId: category,
+        images: {
+          deleteMany: {},
+        },
+      },
       include: {
         images: true,
         category: true,
         sizes: true,
         variants: true,
+      },
+    });
+
+    const product = await prisma.product.update({
+      where: { id },
+      data: {
+        images: {
+          create: imageUrls.map((url) => ({
+            imageUrl: url,
+          })),
+        },
       },
     });
 

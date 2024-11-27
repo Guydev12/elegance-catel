@@ -1,3 +1,4 @@
+import { Category, Image, ProductSize as PdSize, ProductVariant as PdVariant, } from "@prisma/client";
 import { z } from "zod";
 // Customer Model
 export const CustomerSchema = z.object({
@@ -151,3 +152,21 @@ export type UserEntity = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+
+export type ProductDto ={
+
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    sizes: PdSize[];
+    isFeatured: boolean;
+
+    category: Category;
+    images: Image[];
+    variants: PdVariant[];
+
+
+}

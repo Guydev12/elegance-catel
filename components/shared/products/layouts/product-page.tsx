@@ -34,13 +34,13 @@ const ProductPage = async () => {
     createdAt: product.createdAt,
   }));
   return (
-    <>
+    <div className="w-full">
       <DataTable
         columns={ProductColumns}
         message="No Product."
         data={formattedProducts}
       />
-    </>
+    </div>
   );
 };
 
