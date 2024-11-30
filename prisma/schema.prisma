@@ -94,6 +94,7 @@ model Order {
   customer   Customer      @relation(fields: [customerId], references: [id])
   products   OrderProduct[]
   total      Float
+  isPaid     Boolean       @default(false)
   status     String        @default("Pending")
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt

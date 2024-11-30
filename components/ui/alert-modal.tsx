@@ -7,24 +7,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ReactNode } from "react";
 
 type AlertModalProps = {
   open: boolean; // Add a prop to control the open state
   onOpenChange: (isOpen: boolean) => void; // Callback to change open state
+  children?: ReactNode;
   title?: string;
   description?: string;
   confirmText?: string;
   cancelText?: string;
-  onConfirm: () => void; // Callback for confirm action
+  onConfirm?: () => void; // Callback for confirm action
 };
 
 export function AlertModal({
+  children,
   open,
   onOpenChange,
   title,
   description,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText,
+  cancelText,
   onConfirm,
 }: AlertModalProps) {
   return (
@@ -34,16 +37,19 @@ export function AlertModal({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <div className="flex space-x-4  items-center justify-end">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              {cancelText}
-            </Button>
-            <Button variant="destructive" onClick={onConfirm}>
-              {confirmText}
-            </Button>
-          </div>
-        </DialogFooter>
+        {children && <div className="my-4">{children}</div>}
+        {cancelText && confirmText && (
+          <DialogFooter>
+            <div className="flex space-x-4  items-center justify-end">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                {cancelText}
+              </Button>
+              <Button variant="destructive" onClick={onConfirm}>
+                {confirmText}
+              </Button>
+            </div>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

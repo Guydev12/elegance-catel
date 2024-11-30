@@ -123,6 +123,18 @@ export async function createProduct(
         details: error.errors,
       };
     }
+    if (error instanceof TypeError) {
+      // Handle network error specifically
+      console.error(
+        "Network error occurred (e.g., server down, bad URL):",
+        error,
+      );
+      return {
+        success: false,
+        error: "Network error occurred ",
+        details: error.cause,
+      };
+    }
     return { success: false, error: "Failed to create product" };
   }
 }

@@ -2,12 +2,17 @@
 
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma"; // Import your Prisma instance
-import { signIn } from "@/auth"; // Import your Prisma instance
+import { auth, signIn } from "@/auth"; // Import your Prisma instance
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { AuthError } from "next-auth";
 import { loginSchema, registerSchema } from "@/types";
 import { User } from "@prisma/client";
+
+const editSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  avatar: z.string().optional(),
+});
 
 export async function createUser(values: z.infer<typeof registerSchema>) {
   const validateFields = registerSchema.safeParse(values);
@@ -47,6 +52,7 @@ export async function createUser(values: z.infer<typeof registerSchema>) {
         isAdmin,
       },
     });
+
     return { success: "Account Created" };
     redirect("/login");
   } catch (err) {
@@ -93,4 +99,49 @@ export async function getUserById(userId: string): Promise<User | undefined> {
 
   if (!user) return undefined;
   return user;
+}
+
+export async function editProfile(value: z.infer<typeof editSchema>) {
+  const session = await auth();
+
+  if (!session) {
+    return {
+      success: false,
+      error: "Unauthorized",
+      status: 401,
+    };
+  }
+
+  const validateFields = editSchema.safeParse(value);
+  if (!validateFields.success) {
+    return {
+      success: false,
+      error: "Invalid field",
+    };
+  }
+  const { username, avatar } = validateFields.data;
+  try {
+    const id = parseInt(session.user.id, 10);
+    await prisma.user.update({
+      where: { id },
+      data: {
+        username,
+        avatar,
+        updatedAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      message: "Profile updated successfully",
+    };
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return {
+      success: false,
+      error: "An error occurred while updating the profile",
+
+      status: 500,
+    };
+  }
 }

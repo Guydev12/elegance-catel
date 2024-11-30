@@ -3,7 +3,6 @@
 import * as React from "react";
 import { ChevronRight, ShoppingBag } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -39,6 +38,7 @@ import AppLogo from "@/components/shared/AppLogo";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { User } from "@prisma/client";
+import {ProfileDropdown }from "./profile-dropdown";
 
 type PropOptions = {
   children: React.ReactNode;
@@ -50,11 +50,11 @@ const pathMapping: Record<string, string> = {
   "/admin/products/categories/new": "Category",
   "/admin/products/new": "Products",
   "/admin/products": "Products",
+  "/admin/products/edit": "Products",
 };
 export const CustomSidebar: React.FC<PropOptions> = ({ children, user }) => {
   const username = user?.username;
-  const userImage = user?.avatar;
-  const fallBackImage = username?.charAt(0).toUpperCase();
+ 
 
   const pathname = usePathname();
   const lastUrl = pathname.split("/").pop();
@@ -180,11 +180,8 @@ export const CustomSidebar: React.FC<PropOptions> = ({ children, user }) => {
           </div>
           <div className="flex items-center gap-4 ">
             <h5>{username}</h5>
-            <Avatar>
-              <AvatarImage src={userImage as string} alt="@shadcn" />
-              <AvatarFallback>{fallBackImage}</AvatarFallback>
-            </Avatar>
-          </div>
+             <ProfileDropdown user={user}/>
+         </div>
         </header>
         <main>{children}</main>
       </SidebarInset>

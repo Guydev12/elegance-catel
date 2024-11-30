@@ -72,13 +72,6 @@ export function CellAction({ data }: CellActionProps) {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => {
-              router.push(`/admin/products/${data.id}`);
-            }}
-          >
-            View
-          </DropdownMenuItem>
-          <DropdownMenuItem
             className="text-red-600 hover:bg-red-200 hover:text-red-600"
             onClick={() => {
               setShowModal(true);

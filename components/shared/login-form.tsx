@@ -123,4 +123,3 @@ const CardWrapper = ({}) => {
 };
 
 export default CardWrapper;
-

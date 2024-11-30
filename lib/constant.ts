@@ -1,12 +1,5 @@
 import { SideNavItem } from "@/types";
-import {
-  BarChart3,
-  Home,
-  Package,
-  Settings,
-  ShoppingCart,
-  Users,
-} from "lucide-react";
+import { Home, Package, ShoppingCart, Users } from "lucide-react";
 
 export const SIDENAV_ITEMS: SideNavItem[] = [
   {
@@ -70,8 +63,6 @@ export const navItems = [
       { title: "Categories", url: "/admin/products/categories" },
     ],
   },
-  { title: "Orders", icon: ShoppingCart, url: "/admin/Orders" },
+  { title: "Orders", icon: ShoppingCart, url: "/admin/orders" },
   { title: "Customers", icon: Users, url: "/admin/customers" },
-  { title: "Analytics", icon: BarChart3, url: "/admin/analytics" },
-  { title: "Settings", icon: Settings, url: "/admin/settings" },
 ];

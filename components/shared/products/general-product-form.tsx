@@ -38,6 +38,7 @@ import {
 import { Category } from "@prisma/client";
 import { createProduct } from "@/lib/actions/product.actions";
 import { ProductSchema } from "@/types";
+import { useRouter } from "next/navigation";
 
 type FormValues = z.infer<typeof ProductSchema>;
 
@@ -59,6 +60,8 @@ export default function GeneralProductForm({
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(ProductSchema),
     defaultValues: {
@@ -148,6 +151,7 @@ export default function GeneralProductForm({
           setImageUrls([]);
           // Show success message
           toast.success(result?.message as string);
+          router.push("/admin/products");
         } else if (result.error) {
           // Show error message
           toast.error(result.error);
@@ -164,22 +168,21 @@ export default function GeneralProductForm({
     onChange: (value: string[]) => void,
   ) => {
     const files = e.target.files;
-    console.log("IMAGR_CHANGE", files);
+
     if (files) {
       const fileArray = Array.from(files);
-      console.log("FILES_ARRAY", fileArray);
+
       const newPreviewImages = fileArray.map((file) =>
         URL.createObjectURL(file),
       );
-      console.log("IMAGES_URLs", newPreviewImages);
+
       setImageUrls((imageUrl) => [...imageUrl, ...newPreviewImages]);
       setPreviewImages((prevImages) => [...prevImages, ...newPreviewImages]);
       const currentImages = form.getValues("images") || [];
-      console.log("FORM_images", currentImages);
+
       const newImageUrls = fileArray.map((file) => file.name);
       onChange(newImageUrls);
       form.setValue("images", [...currentImages, ...newImageUrls]);
-      console.log({ Urls: newImageUrls, imageUrls });
     }
   };
 
@@ -253,6 +256,7 @@ export default function GeneralProductForm({
                           <Input
                             type="number"
                             {...field}
+                            placeholder="9.99"
                             onChange={(e) =>
                               field.onChange(parseFloat(e.target.value))
                             }
@@ -273,6 +277,7 @@ export default function GeneralProductForm({
                           <Input
                             type="number"
                             {...field}
+                            value={field.value}
                             onChange={(e) =>
                               field.onChange(parseInt(e.target.value, 10))
                             }

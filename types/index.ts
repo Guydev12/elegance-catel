@@ -1,4 +1,9 @@
-import { Category, Image, ProductSize as PdSize, ProductVariant as PdVariant, } from "@prisma/client";
+import {
+  Category,
+  Image,
+  ProductSize as PdSize,
+  ProductVariant as PdVariant,
+} from "@prisma/client";
 import { z } from "zod";
 // Customer Model
 export const CustomerSchema = z.object({
@@ -153,20 +158,21 @@ export type UserEntity = {
   updatedAt: Date;
 };
 
+export type ProductDto = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  sizes: PdSize[];
+  isFeatured: boolean;
 
-export type ProductDto ={
+  category: Category;
+  images: Image[];
+  variants: PdVariant[];
+};
 
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    stock: number;
-    sizes: PdSize[];
-    isFeatured: boolean;
-
-    category: Category;
-    images: Image[];
-    variants: PdVariant[];
-
-
-}
+export const ProfileSchema = z.object({
+  username: z.string().min(3).max(30),
+  avatar: z.string().optional(),
+});
