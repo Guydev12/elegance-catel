@@ -66,3 +66,36 @@ export const navItems = [
   { title: "Orders", icon: ShoppingCart, url: "/admin/orders" },
   { title: "Customers", icon: Users, url: "/admin/customers" },
 ];
+
+export const NAV_ITEMS = [
+  {
+    label: "Acceuil",
+    icon: "",
+    path: "/",
+    id: 1,
+  },
+  {
+    label: "Nouveaute",
+    icon: "",
+    path: "/nouveaute",
+    id: 2,
+  },
+  {
+    label: "Boutique",
+    icon: "",
+    path: "/Boutique",
+    id: 3,
+  },
+  {
+    label: "Categories",
+    icon: "",
+    path: "/categories",
+    id: 4,
+  },
+  {
+    label: "orders",
+    icon: "",
+    path: "/orders",
+    id: 5,
+  },
+];

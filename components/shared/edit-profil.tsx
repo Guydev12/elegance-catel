@@ -34,7 +34,6 @@ type EditProfileFormProps = {
 export const EditProfileForm: FC<EditProfileFormProps> = ({ user }) => {
   const [isPending, startTransition] = useTransition();
   const [url, setUrl] = useState<string>(user.avatar ?? "");
-
   const form = useForm<FormValues>({
     resolver: zodResolver(editSchema),
     defaultValues: {

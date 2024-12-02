@@ -3,11 +3,12 @@
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma"; // Import your Prisma instance
 import { auth, signIn } from "@/auth"; // Import your Prisma instance
-import { redirect } from "next/navigation";
+
 import { z } from "zod";
 import { AuthError } from "next-auth";
 import { loginSchema, registerSchema } from "@/types";
 import { User } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 
 const editSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -54,11 +55,13 @@ export async function createUser(values: z.infer<typeof registerSchema>) {
     });
 
     return { success: "Account Created" };
-    redirect("/login");
+  
   } catch (err) {
+    console.error(err)
     return { error: "something went wrong" };
-    throw err;
+   
   }
+
 }
 export async function loginUser(values: z.infer<typeof loginSchema>) {
   const validateFields = loginSchema.safeParse(values);
@@ -130,7 +133,7 @@ export async function editProfile(value: z.infer<typeof editSchema>) {
         updatedAt: new Date(),
       },
     });
-
+   revalidatePath("/","layout")
     return {
       success: true,
       message: "Profile updated successfully",
