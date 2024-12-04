@@ -3,7 +3,7 @@ import {persist, createJSONStorage}from"zustand/middleware"
 import { ProductDto } from "@/types"
 import toast from "react-hot-toast";
 
-
+//the cart interface
 interface CartStore {
     items:ProductDto[];
     addItem: (data:ProductDto)=>void;
