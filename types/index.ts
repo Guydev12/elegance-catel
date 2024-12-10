@@ -4,7 +4,7 @@ import {
   ProductSize as PdSize,
   ProductVariant as PdVariant,
 } from "@prisma/client";
-import { z } from "zod";
+import { string, z } from "zod";
 // Customer Model
 export const CustomerSchema = z.object({
   id: z.string().optional(),
@@ -166,7 +166,7 @@ export type ProductDto = {
   stock: number;
   sizes: PdSize[];
   isFeatured: boolean;
-
+  createdAt: Date;
   category: Category;
   images: Image[];
   variants: PdVariant[];
@@ -175,4 +175,10 @@ export type ProductDto = {
 export const ProfileSchema = z.object({
   username: z.string().min(3).max(30),
   avatar: z.string().optional(),
+});
+
+export const bilboardFormSchema = z.object({
+  image: z.string().min(1),
+  text: z.string().min(8),
+  categoryId: z.string().optional(),
 });

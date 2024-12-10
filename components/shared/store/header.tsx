@@ -40,7 +40,7 @@ const Header: FC<HeaderProps> = ({ session }) => {
         <NavAction />
       </div>
       {session?.user.isAdmin && (
-        <Button className="hidden md:block">
+        <Button className="hidden md:block bg-pink-500 text-white font-bold">
           <Link href="/admin/">Dashboard</Link>
         </Button>
       )}

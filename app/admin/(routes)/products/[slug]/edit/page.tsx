@@ -25,7 +25,7 @@ const EditProducts: FC<EditProductsProps> = async ({ params }) => {
     price: product.price,
     stock: product.stock,
     category: product.category,
-
+    createdAt: product.createdAt,
     images: product.images,
     isFeatured: product.isFeatured,
     sizes: product.sizes,

@@ -83,7 +83,7 @@ export const NAV_ITEMS = [
   {
     label: "Boutique",
     icon: "",
-    path: "/Boutique",
+    path: "/boutique",
     id: 3,
   },
   {

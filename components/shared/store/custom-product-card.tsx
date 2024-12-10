@@ -1,67 +1,103 @@
+"use client";
+
 import React from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
 
 interface ProductCardProps {
-  onNavigate: () => void;
-  name: string;
-  price: number;
-  description: string;
-  imageUrl: string;
-  onAddToCart: () => void;
+  product: {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    images: { imageUrl: string }[];
+    sizes: { size: string }[];
+    variants: { color: string; price: number }[];
+    isFeatured: boolean;
+  };
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({
-  name,
-  price,
-  description,
-  imageUrl,
-  onAddToCart,
-  onNavigate,
-}) => {
-  const formatted = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "EUR",
-  }).format(price);
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const router = useRouter();
+
+  // Navigate to product details
+  const handleNavigation = () => {
+    router.push(`/product/${product.id}`);
+  };
+
+  // Format price
+  const formattedPrice = product.variants.length
+    ? `${Math.min(...product.variants.map((v) => v.price))}€ - ${Math.max(
+        ...product.variants.map((v) => v.price),
+      )}€`
+    : `${product.price}€`;
 
   return (
-    <Card
-      onClick={onNavigate}
-      className="w-full max-w-sm overflow-hidden shadow-lg"
+    <div
+      className="relative bg-white border rounded-lg shadow-lg overflow-hidden transition-transform transform hover:scale-105 w-80 cursor-pointer"
+      onClick={handleNavigation}
     >
-      <CardHeader className="p-0">
+      {/* Product Image */}
+      <div className="relative items-center justify-center flex flex-col h-64 bg-gray-100">
         <Image
-          src={imageUrl}
-          alt={name}
-          className="w-full h-48 object-cover"
-          width={300}
-          height={400}
+          src={product.images[0]?.imageUrl || "/default-image.jpg"}
+          alt={product.name}
+          width={100}
+          height={100}
+          className="object-cover"
         />
-      </CardHeader>
-      <CardContent className="p-4">
-        <CardTitle className="text-xl font-bold mb-2">{name}</CardTitle>
-        <p className="text-gray-700 text-base mb-2">{description}</p>
-        <p className="text-gray-900 text-xl font-semibold">{formatted}</p>
-      </CardContent>
-      <CardFooter className="px-4 py-3 flex justify-end bg-gray-50">
-        <Button
-          onClick={onAddToCart}
-          size="icon"
-          variant="outline"
-          className="flex justify-center items-center "
-        >
+        {product.stock === 0 && (
+          <span className="absolute top-2 left-2 bg-red-600 text-white text-sm font-semibold px-2 py-1 rounded">
+            Out of Stock
+          </span>
+        )}
+      </div>
+
+      {/* Product Details */}
+      <div className="p-4">
+        {/* Product Name */}
+        <h3 className="text-lg font-bold text-gray-900 truncate">
+          {product.name}
+        </h3>
+
+        {/* Product Description */}
+        <p className="text-gray-600 text-sm line-clamp-2">
+          {product.description}
+        </p>
+
+        {/* Price */}
+        <p className="text-gray-900 font-semibold mt-2">{formattedPrice}</p>
+
+        {/* Sizes */}
+        {product.sizes.length > 0 && (
+          <p className="text-gray-500 text-sm mt-2">
+            Sizes: {product.sizes.map((s) => s.size).join(", ")}
+          </p>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="p-4 border-t flex items-center justify-between">
+        {/* Variants (Colors) */}
+        <div className="flex items-center gap-1">
+          {product.variants.map((variant, index) => (
+            <div
+              key={index}
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: variant.color }}
+            ></div>
+          ))}
+        </div>
+
+        {/* Featured Badge */}
+
+        <span className="bg-yellow-300 text-yellow-900 text-xs font-semibold px-2 py-1 rounded">
           <ShoppingCart />
-        </Button>
-      </CardFooter>
-    </Card>
+        </span>
+      </div>
+    </div>
   );
 };
 

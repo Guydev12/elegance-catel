@@ -75,7 +75,7 @@ model ProductSize {
 model Category {
   id       String    @id @default(cuid())
   name     String    @unique
-
+  bilboard  Bildboard?
   products  Product[]  @relation("CategoryProducts")
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -110,3 +110,10 @@ model OrderProduct {
 }
 
 
+model Bildboard {
+  id         String      @id @default(cuid())
+  image      String
+  text       String
+  categoryId String?     @unique
+  category   Category?   @relation(fields: [categoryId], references: [id])
+}
